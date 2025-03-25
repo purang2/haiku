@@ -1,6 +1,6 @@
 streamlit
+google-genai
 openai
-google-generativeai
 Pillow
 python-dotenv
 httpx
