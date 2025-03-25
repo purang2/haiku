@@ -44,7 +44,7 @@ def generate_image_with_gemini(prompt: str):
     return None
 
 def main():
-    st.set_page_config(layout="wide", page_title="🌸 하이쿠 ↔ 시화 만들기 _ Google AI")
+    st.set_page_config(layout="wide", page_title="🌸 하이쿠 ↔ 시화 만들기 (Google Gemini)")
     
         
     st.markdown("""
@@ -74,7 +74,7 @@ def main():
         """, unsafe_allow_html=True)
 
     
-    st.title("🌸 하이쿠 ↔ 시화 만들기 _ Google AI")
+    st.title("🌸 하이쿠 ↔ 시화 만들기 (Google Gemini)")
 
     poem = st.text_area("✒️ 하이쿠를 입력하세요", height=200, value="고요한 연못\n개구리 뛰어들자\n물소리 일다\n\n— 마츠오 바쇼")
 
