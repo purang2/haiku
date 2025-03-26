@@ -68,22 +68,24 @@ def image_to_haiku(image: Image.Image) -> str:
     image.save(buffered, format="JPEG")
     img_bytes = buffered.getvalue()
 
-    prompt = (
-        "You are an expert Haiku poet with a deep appreciation of East Asian aesthetics. "
-        "Closely examine the provided image and craft a delicate, evocative, and traditional Korean Haiku. "
-        "Your Haiku must strictly follow a 3-line, 5-7-5 syllable structure. "
-        "Do not include explanations, numbering, or extra commentary—only provide the Haiku poem itself. "
-        "Ensure each line is clearly separated by spaces or new lines, capturing subtle emotions, natural scenes, seasons, and indirect poetic imagery."
-    )
-
     response = genai_client.models.generate_content(
         model="gemini-2.0-flash",
         contents=[
             types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
-            prompt
+            ("제공된 이미지를 바탕으로 동양적인 분위기의 하이쿠를 한국어로 창작해줘. "
+             "하이쿠는 반드시 3행으로 구성하고, 각 행은 공백으로 구분하여 깔끔하게 나타내줘. "
+             "심미적이고 절제된 표현으로, 이미지의 분위기와 정서를 깊이 있게 묘사해줘. "
+             "이미지의 직접적인 묘사보다는, 그 이면에 담긴 감정, 자연의 정취, 그리고 순간의 인상을 담아내야 해. "
+             "반드시 한국어로만 작성해.")
         ],
+        generation_config=types.GenerationConfig(
+            max_output_tokens=50,
+            temperature=0.7
+        )
     )
-    return response.text.strip()
+
+    haiku = response.text.strip()
+    return haiku
 
 
 # CSS 스타일
