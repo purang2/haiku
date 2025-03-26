@@ -147,7 +147,7 @@ def main():
                 generated_image = generate_image_with_gemini(optimized_prompt)
                 if generated_image:
                     st.subheader("🖼️ 생성된 시화")
-                    st.image(generated_image, use_column_width=True)
+                    st.image(generated_image,  use_container_width=True)
                 
                     # 이미지 저장 버튼 추가
                     download_image_button(generated_image)
@@ -158,7 +158,7 @@ def main():
         uploaded_img = st.file_uploader("🎑 이미지를 업로드하세요", type=["jpg", "jpeg", "png"])
         if uploaded_img:
             image = Image.open(uploaded_img)
-            st.image(image, use_column_width=True)
+            st.image(image,  use_container_width=True)
 
             with st.spinner("하이쿠 생성 중..."):
                     st.markdown("""
