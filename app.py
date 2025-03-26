@@ -1,4 +1,3 @@
-
 import streamlit as st
 import os
 from openai import OpenAI
@@ -33,7 +32,7 @@ def generate_image_with_gemini(prompt: str):
     response = genai_client.models.generate_content(
         model="gemini-2.0-flash-exp-image-generation",
         contents=prompt,
-        config=types.GenerateContentConfig(response_modalities=["Image","Text"])
+        config=types.GenerateContentConfig(response_modalities=["Image", "Text"])
     )
 
     if response and response.candidates:
@@ -43,54 +42,81 @@ def generate_image_with_gemini(prompt: str):
             return Image.open(io.BytesIO(img_bytes))
     return None
 
-def main():
-    st.set_page_config(layout="wide", page_title="🌸 하이쿠 ↔ 시화 만들기 (Google Gemini)")
-    
-        
+# 이미지 → 하이쿠 변환
+def image_to_haiku(image: Image.Image) -> str:
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    img_bytes = buffered.getvalue()
+
+    response = genai_client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
+                  "Describe this image poetically as a Haiku in Korean(=한국어)"]
+    )
+    return response.text.strip()
+
+# CSS 스타일
+def inject_css():
     st.markdown("""
-            <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap');
-            html, body, [class*="css"] {
-                font-family: 'Noto Serif KR', serif;
-                background-color: #FFFCF5;
-                color: #3C3C3C;
-            }
-            h1, h2, h3 {
-                color: #5C4033;
-            }
-            .stButton button {
-                background-color: #D7CCC8;
-                color: #5C4033;
-                border-radius: 20px;
-            }
-            .stButton button:hover {
-                background-color: #A1887F;
-                color: white;
-            }
-            textarea {
-                background-color: #FAF5E9 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap');
+    html, body, [class*="css"] {
+        font-family: 'Noto Serif KR', serif;
+        background-color: #FFFCF5;
+        color: #3C3C3C;
+    }
+    h1, h2, h3 {
+        color: #5C4033;
+    }
+    .stButton button {
+        background-color: #D7CCC8;
+        color: #5C4033;
+        border-radius: 20px;
+    }
+    .stButton button:hover {
+        background-color: #A1887F;
+        color: white;
+    }
+    textarea {
+        background-color: #FAF5E9 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    
-    st.title("🌸 하이쿠 ↔ 시화 만들기 (Google Gemini)")
+def main():
+    st.set_page_config(layout="wide", page_title="🌸 하이쿠 ↔ 시화 번안기")
+    inject_css()
+    st.title("🌸 하이쿠 ↔ 시화 번안기")
 
-    poem = st.text_area("✒️ 하이쿠를 입력하세요", height=200, value="고요한 연못\n개구리 뛰어들자\n물소리 일다\n\n— 마츠오 바쇼")
+    mode = st.radio("모드를 선택하세요", ["✒️ 하이쿠 → 🖼️ 시화", "🖼️ 이미지 → ✒️ 하이쿠"], horizontal=True)
 
-    if st.button("✨ 시화 생성"):
-        with st.spinner("정교한 프롬프트 생성 중..."):
-            optimized_prompt = poem_to_imagefx_prompt(poem)
-            st.subheader("🖌️ 생성된 프롬프트")
-            st.markdown(f"> {optimized_prompt}")
+    if mode == "✒️ 하이쿠 → 🖼️ 시화":
+        poem = st.text_area("✒️ 하이쿠를 입력하세요", height=200, value="고요한 연못\n개구리 뛰어들자\n물소리 일다\n\n— 마츠오 바쇼")
+        if st.button("✨ 시화 생성"):
+            with st.spinner("프롬프트 생성 중..."):
+                optimized_prompt = poem_to_imagefx_prompt(poem)
+                st.subheader("🖌️ 생성된 프롬프트")
+                st.markdown(f"> {optimized_prompt}")
 
-        with st.spinner("시화 이미지 생성 중..."):
-            generated_image = generate_image_with_gemini(optimized_prompt)
-            if generated_image:
-                st.subheader("🖼️ 생성된 시화")
-                st.image(generated_image, use_column_width=True)
-            else:
-                st.error("이미지 생성에 실패했습니다.")
+            with st.spinner("시화 이미지 생성 중..."):
+                generated_image = generate_image_with_gemini(optimized_prompt)
+                if generated_image:
+                    st.subheader("🖼️ 생성된 시화")
+                    st.image(generated_image, use_column_width=True)
+                else:
+                    st.error("이미지 생성 실패.")
+
+    else:  # 이미지 → 하이쿠
+        uploaded_img = st.file_uploader("🎑 이미지를 업로드하세요", type=["jpg", "jpeg", "png"])
+        if uploaded_img:
+            image = Image.open(uploaded_img)
+            st.image(image, use_column_width=True)
+
+            if st.button("✒️ 하이쿠 생성"):
+                with st.spinner("하이쿠 생성 중..."):
+                    haiku = image_to_haiku(image)
+                    st.subheader("📜 생성된 하이쿠")
+                    st.markdown(f"_{haiku}_")
 
 if __name__ == "__main__":
     main()
