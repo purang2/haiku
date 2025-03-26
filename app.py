@@ -30,6 +30,20 @@ def poem_to_imagefx_prompt(poem: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
+def copy_button(text):
+    copy_code = f"""
+    <button onclick="navigator.clipboard.writeText(`{text}`).then(()=>alert('✅ 하이쿠가 복사되었습니다!'))"
+        style='
+            padding: 8px 16px;
+            background-color: #D7CCC8;
+            color: #5C4033;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-family: "Noto Serif KR";
+        '>📋 하이쿠 복사</button>
+    """
+    st.markdown(copy_code, unsafe_allow_html=True)
 
 # 이미지 다운로드 버튼 추가 함수
 def download_image_button(image, filename_prefix="haiku_image"):
@@ -174,12 +188,28 @@ def main():
                         </style>
                     """, unsafe_allow_html=True)
                     
+                   # 하이쿠 결과 표시
                     haiku = image_to_haiku(image)
-                    st.markdown(f"<div class='haiku-box'>{haiku}</div>", unsafe_allow_html=True)
                     
-                    st.button("📋 하이쿠 복사", on_click=lambda: st.clipboard_set(haiku))
-                    st.subheader("📜 생성된 하이쿠")
-                    st.markdown(f"_{haiku}_")
+                    if haiku:
+                        st.markdown(
+                            f"""
+                            <div class='haiku-box' style="
+                                font-family: 'Noto Serif KR'; 
+                                white-space: pre-line; 
+                                font-size: 20px; 
+                                padding: 20px; 
+                                border-radius: 15px; 
+                                background-color: #FAF5E9; 
+                                color: #5C4033; 
+                                margin-bottom: 10px;
+                                text-align: center;">
+                                {haiku}
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                        # 복사 버튼 추가
+                        copy_button(haiku)
 
 if __name__ == "__main__":
     main()
