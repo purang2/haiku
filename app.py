@@ -69,7 +69,7 @@ def image_to_haiku(image: Image.Image) -> str:
     img_bytes = buffered.getvalue()
 
     response = genai_client.models.generate_content(
-        model="gemini-2.0-flash-thinking-exp-01-21",
+        model="gemini-2.0-flash",
         contents=[
             types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
             ("제공된 이미지를 바탕으로 동양적 감성이 담긴 한국어 하이쿠를 창작해줘. "
@@ -148,8 +148,7 @@ def main():
             image = Image.open(uploaded_img)
             st.image(image, use_column_width=True)
 
-            if st.button("✒️ 하이쿠 생성"):
-                with st.spinner("하이쿠 생성 중..."):
+            with st.spinner("하이쿠 생성 중..."):
                     st.markdown("""
                         <style>
                         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap');
