@@ -69,7 +69,7 @@ def image_to_haiku(image: Image.Image) -> str:
     img_bytes = buffered.getvalue()
 
     response = genai_client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-pro-exp-03-25",
         contents=[
             types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
             ("제공된 이미지를 바탕으로 동양적 감성이 담긴 한국어 하이쿠를 창작해줘. "
