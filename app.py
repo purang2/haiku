@@ -6,6 +6,8 @@ from google.genai import types
 from PIL import Image
 import base64
 import io
+from datetime import datetime
+
 
 GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
 OPENAI_KEY = st.secrets["OPENAI_API_KEY"]
@@ -28,6 +30,24 @@ def poem_to_imagefx_prompt(poem: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
+
+# 이미지 다운로드 버튼 추가 함수
+def download_image_button(image, filename_prefix="haiku_image"):
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    img_bytes = buffered.getvalue()
+
+    filename = f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+
+    st.download_button(
+        label="📥 이미지 저장",
+        data=img_bytes,
+        file_name=filename,
+        mime="image/png"
+    )
+
+
+
 def generate_image_with_gemini(prompt: str):
     response = genai_client.models.generate_content(
         model="gemini-2.0-flash-exp-image-generation",
@@ -48,12 +68,23 @@ def image_to_haiku(image: Image.Image) -> str:
     image.save(buffered, format="JPEG")
     img_bytes = buffered.getvalue()
 
+    prompt = (
+        "You are an expert Haiku poet with a deep appreciation of East Asian aesthetics. "
+        "Closely examine the provided image and craft a delicate, evocative, and traditional Korean Haiku. "
+        "Your Haiku must strictly follow a 3-line, 5-7-5 syllable structure. "
+        "Do not include explanations, numbering, or extra commentary—only provide the Haiku poem itself. "
+        "Ensure each line is clearly separated by spaces or new lines, capturing subtle emotions, natural scenes, seasons, and indirect poetic imagery."
+    )
+
     response = genai_client.models.generate_content(
         model="gemini-2.0-flash",
-        contents=[types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
-                  "Describe this image poetically as a Haiku in Korean(=한국어)"]
+        contents=[
+            types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
+            prompt
+        ],
     )
     return response.text.strip()
+
 
 # CSS 스타일
 def inject_css():
@@ -103,8 +134,11 @@ def main():
                 if generated_image:
                     st.subheader("🖼️ 생성된 시화")
                     st.image(generated_image, use_column_width=True)
+                
+                    # 이미지 저장 버튼 추가
+                    download_image_button(generated_image)
                 else:
-                    st.error("이미지 생성 실패.")
+                    st.error("이미지 생성에 실패했습니다.")
 
     else:  # 이미지 → 하이쿠
         uploaded_img = st.file_uploader("🎑 이미지를 업로드하세요", type=["jpg", "jpeg", "png"])
@@ -114,7 +148,37 @@ def main():
 
             if st.button("✒️ 하이쿠 생성"):
                 with st.spinner("하이쿠 생성 중..."):
+                    st.markdown("""
+                        <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap');
+                        .haiku-box {
+                            font-family: 'Noto Serif KR', serif;
+                            font-size: 22px;
+                            background-color: #FAF5E9;
+                            color: #3C3C3C;
+                            padding: 20px;
+                            border-radius: 15px;
+                            line-height: 1.6;
+                            text-align: center;
+                            white-space: pre-line;
+                        }
+                        .stButton button {
+                            margin-top: 10px;
+                            background-color: #D7CCC8;
+                            color: #5C4033;
+                            border-radius: 20px;
+                        }
+                        .stButton button:hover {
+                            background-color: #A1887F;
+                            color: white;
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
+                    
                     haiku = image_to_haiku(image)
+                    st.markdown(f"<div class='haiku-box'>{haiku}</div>", unsafe_allow_html=True)
+                    
+                    st.button("📋 하이쿠 복사", on_click=lambda: st.clipboard_set(haiku))
                     st.subheader("📜 생성된 하이쿠")
                     st.markdown(f"_{haiku}_")
 
