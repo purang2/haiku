@@ -63,29 +63,27 @@ def generate_image_with_gemini(prompt: str):
     return None
 
 # 이미지 → 하이쿠 변환
+
+# 이미지 → 하이쿠 변환
 def image_to_haiku(image: Image.Image) -> str:
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
     img_bytes = buffered.getvalue()
 
-    response = genai_client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
-            ("제공된 이미지를 바탕으로 동양적 감성이 담긴 한국어 하이쿠를 창작해줘. "
+    prompt = ("제공된 이미지를 바탕으로 동양적 감성이 담긴 한국어 하이쿠를 창작해줘. "
              "반드시 5-7-5 음절의 3행 구조로 하이쿠를 구성해야 하고, 각 행은 명확한 띄어쓰기로 줄바꿈해서 제시해줘. "
              "이미지의 직접적인 묘사보다는 자연과 인간의 감정이 은은하게 어우러진 간결하고 함축적인 표현으로, "
              "하이쿠 특유의 절제된 아름다움과 여운을 느낄 수 있도록 작성해줘. "
              "반드시 한국어로만 작성하고, 다른 설명이나 부가적인 말은 덧붙이지 마.")
-        ],
-        generation_config=types.GenerationConfig(
-            max_output_tokens=50,
-            temperature=0.7
-        )
-    )
 
-    haiku = response.text.strip()
-    return haiku
+    response = genai_client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[
+            types.Part(inline_data=types.Blob(mime_type="image/jpeg", data=img_bytes)),
+            prompt
+        ],
+    )
+    return response.text.strip()
 
 
 # CSS 스타일
